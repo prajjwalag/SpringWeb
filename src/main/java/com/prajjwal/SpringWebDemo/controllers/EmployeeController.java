@@ -2,14 +2,18 @@ package com.prajjwal.SpringWebDemo.controllers;
 
 import com.prajjwal.SpringWebDemo.dto.EmployeeDTO;
 import com.prajjwal.SpringWebDemo.entities.EmployeeEntity;
+import com.prajjwal.SpringWebDemo.exception.ResourceNotFoundException;
 import com.prajjwal.SpringWebDemo.services.EmployeeService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 
@@ -27,10 +31,8 @@ public class EmployeeController {
 
     @GetMapping("/{employeeId}")
     public ResponseEntity<EmployeeDTO> getEmployeeById(@PathVariable Long employeeId) {
-        Optional<EmployeeDTO> employeeDTO = employeeService.getEmployeeById(employeeId);
-        return employeeDTO
-                .map(employeeDTO1 -> ResponseEntity.ok(employeeDTO1))
-                .orElse(ResponseEntity.badRequest().build());
+        EmployeeDTO employeeDTO = employeeService.getEmployeeById(employeeId);
+        return ResponseEntity.ok(employeeDTO);
     }
 
     @GetMapping
@@ -40,22 +42,21 @@ public class EmployeeController {
     }
 
     @PostMapping
-    public ResponseEntity<EmployeeDTO> createNewEmployee(@RequestBody EmployeeDTO inputEmployee) {
+    public ResponseEntity<EmployeeDTO> createNewEmployee(@RequestBody @Valid EmployeeDTO inputEmployee) {
         EmployeeDTO employeeDTO = employeeService.createNewEmployee(inputEmployee);
         return new ResponseEntity<>(employeeDTO, HttpStatus.CREATED);
     }
 
     @PutMapping("/{employeeId}")
-    public ResponseEntity<EmployeeDTO> updateEmployeeById(@RequestBody EmployeeDTO employeeDTO, @PathVariable Long employeeId) {
+    public ResponseEntity<EmployeeDTO> updateEmployeeById(@RequestBody @Valid EmployeeDTO employeeDTO, @PathVariable Long employeeId) {
         return ResponseEntity.ok(employeeService.updateEmployeeById(employeeId, employeeDTO));
     }
 
     @PatchMapping("/{employeeId}")
     public ResponseEntity<EmployeeDTO> updateEmployeesPartialDetailsById(@RequestBody Map<String, Object> updates, @PathVariable Long employeeId) {
         EmployeeDTO employeeDTO = employeeService.updateEmployeesPartialDetailsById(updates, employeeId);
-        if(employeeDTO == null) {
-            return ResponseEntity.badRequest().build();
-        } else {
+        if(employeeDTO == null) return ResponseEntity.badRequest().build();
+        else {
             return ResponseEntity.ok(employeeDTO);
         }
     }
